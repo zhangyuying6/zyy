@@ -307,8 +307,12 @@ function selectShape(event) {
     if (selectedElement) {
         const shapeElements = selectedElement.querySelectorAll('circle, rect, polygon, ellipse, line');
         shapeElements.forEach(elem => {
+            if (elem.tagName === 'line') {
+                // 保存当前横线的颜色
+                elem.setAttribute('data-original-stroke', elem.getAttribute('stroke'));
+            }
             elem.setAttribute('stroke-width', '5');
-            elem.setAttribute('stroke', 'red');
+            elem.setAttribute('stroke', 'red'); // 高亮时边框变成红色
         });
         selectedElement.classList.add('selected');
 
@@ -323,10 +327,17 @@ function deselectAll() {
         const shapeElements = shape.querySelectorAll('circle, rect, polygon, ellipse, line');
         shapeElements.forEach(elem => {
             elem.setAttribute('stroke-width', '1');
-            elem.setAttribute('stroke', 'black');
+            if (elem.tagName === 'line') {
+                // 保持原横线颜色
+                const originalStroke = elem.getAttribute('data-original-stroke');
+                elem.setAttribute('stroke', originalStroke || 'black'); // 如果没有保存则为黑色
+            } else {
+                elem.setAttribute('stroke', 'black'); // 恢复其他元素的边框颜色
+            }
         });
     });
 
+    // 处理左侧的形状（如果需要）
     shapes.forEach(shape => {
         const svg = shape.querySelector('svg');
         if (svg) {
@@ -335,14 +346,13 @@ function deselectAll() {
                 if (['circle', 'rect', 'polygon', 'ellipse'].includes(elem.tagName)) {
                     elem.setAttribute('fill', 'none');
                 }
-                elem.setAttribute('stroke', 'black');
+                elem.setAttribute('stroke', 'black'); // 恢复边框颜色
             });
         }
     });
 
     selectedElement = null;
 }
-
 document.addEventListener('click', function(event) {
     if (event.target === rightPanel || event.target === leftPanel) {
         deselectAll();
@@ -397,13 +407,18 @@ colorPicker.addEventListener('input', () => {
         const color = colorPicker.value;
         const shapeElements = selectedElement.querySelectorAll('circle, rect, polygon, ellipse, line');
         shapeElements.forEach(elem => {
-            if (elem.tagName === 'line' || elem.getAttribute('fill') !== 'none') {
+            if (  elem.getAttribute('fill') !== 'none') {
                 elem.setAttribute('stroke', color);
+            }
+
+            if ( elem.tagName === 'line'){
+                elem.setAttribute('data-original-stroke', elem.getAttribute('stroke')); 
             }
             if (elem.tagName !== 'line') {
                 elem.setAttribute('fill', color);
             }
         });
+        
     }
 });
 
